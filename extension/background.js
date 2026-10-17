@@ -11,6 +11,17 @@ let direct = {}; // deviceId -> { can, addrs }
 const offers = new Map(); // offer id -> resolve
 const phoneNotifs = new Map(); // mirrored notification id -> notification still showing on the phone
 
+// The newest unseen item: the popup opens on it (its tab, scrolled, highlighted).
+async function setFocus(tab, id) {
+  await chrome.storage.session.set({ focus: { tab, id } });
+}
+
+// Desktop notification clicked: show that item in the popup.
+async function openPopupAt(tab, id) {
+  await setFocus(tab, id);
+  try { await chrome.action.openPopup(); return true; } catch { return false; }
+}
+
 // Badge = what has not been seen yet: unread pushes + phone notifications that
 // arrived since the popup was last opened and are still showing on the phone.
 async function unseenPhone() {
@@ -171,6 +182,7 @@ async function handle(msg) {
     if (p.source_device === device?.id) return;
     if (p.target_device && p.target_device !== device?.id) return;
     await notifyPush(p);
+    await setFocus('pushes', p.id);
     await addUnread(1);
   } else if (msg.type === 'delete') {
     chrome.notifications.clear(`push-${msg.id}`);
@@ -179,6 +191,7 @@ async function handle(msg) {
     if (n.device === device?.id) return;
     phoneNotifs.set(n.id, n);
     await markPhoneSeen(n.id, false); // new, or new content in an existing one
+    await setFocus('phone', n.id);
     updateBadge();
     const { mirrorOff } = await chrome.storage.local.get('mirrorOff');
     if (mirrorOff) return;
@@ -294,11 +307,16 @@ chrome.notifications.onButtonClicked.addListener(async (id, index) => {
   chrome.notifications.clear(id);
 });
 
+// Clicking a notification opens the popup on that item (the buttons do the actions).
 chrome.notifications.onClicked.addListener(async (id) => {
   const p = pushes.get(id);
-  if (p?.type === 'link') chrome.tabs.create({ url: p.url });
-  else if (p) copyToClipboard(p.body);
   chrome.notifications.clear(id);
+  if (id.startsWith('mirror-')) return openPopupAt('phone', id.slice(7));
+  if (id.startsWith('rx-')) return openPopupAt('pushes', id);
+  if (id.startsWith('push-')) {
+    const shown = await openPopupAt('pushes', id.slice(5));
+    if (!shown && p?.type === 'link') chrome.tabs.create({ url: p.url }); // no popup possible: old behaviour
+  }
 });
 
 // Closing a phone notification here closes it on the other desktops too.
@@ -351,6 +369,7 @@ async function receiveDirect(from, d) {
       buttons: [{ title: 'Download' }],
       requireInteraction: true,
     });
+    await setFocus('pushes', `rx-${d.id}`);
     await addUnread(1);
   } catch (err) {
     console.warn('direct receive failed', err);
@@ -429,7 +448,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
     if (msg.type === 'directOffer') return { offer: await directOffer(msg.target, msg.meta) };
     if (msg.type === 'download') return downloadFile(msg.push);
     if (msg.type === 'seen') {
-      await chrome.storage.session.set({ unread: 0, seenMirror: [...phoneNotifs.keys()] });
+      await chrome.storage.session.set({ unread: 0, seenMirror: [...phoneNotifs.keys()], focus: null });
       updateBadge();
     }
   })().then((r) => reply({ ok: true, ...r }), (e) => reply({ ok: false, error: e.message }));

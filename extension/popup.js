@@ -110,7 +110,7 @@ function renderPush(p) {
   const head = el('div', { class: 'head' },
     el('span', {}, `${nameOf(p.source_device)} → ${p.target_device ? nameOf(p.target_device) : 'all'}`),
     el('time', {}, ago(p.created_at)));
-  const item = el('div', { class: 'item' }, head);
+  const item = el('div', { class: 'item', 'data-id': p.id }, head);
   if (p.title) item.append(el('div', { class: 'name' }, p.title));
   const actions = el('div', { class: 'actions' });
   if (p.type === 'link') {
@@ -156,7 +156,7 @@ function storedImage(f) {
 }
 
 function renderReceived(f) {
-  return el('div', { class: 'item' },
+  return el('div', { class: 'item', 'data-id': `rx-${f.id}` },
     el('div', { class: 'head' }, el('span', {}, `${f.from} → this browser · ⚡ direct`), el('time', {}, ago(f.at))),
     PREVIEWABLE.test(f.mime || '') && f.size <= MAX_PREVIEW ? storedImage(f) : null,
     el('div', { class: 'name' }, `📎 ${f.name}`),
@@ -246,7 +246,7 @@ async function loadMirror() {
   const { notifications } = await api('/api/mirror');
   const list = notifications.filter((n) => n.device !== me.id);
   $('#mirrorEmpty').hidden = list.length > 0;
-  $('#mirrorList').replaceChildren(...list.map((n) => el('div', { class: 'item mirror' },
+  $('#mirrorList').replaceChildren(...list.map((n) => el('div', { class: 'item mirror', 'data-id': n.id },
     el('img', { src: n.icon || 'icons/icon-48.png', alt: '' }),
     el('div', { class: 'head' }, el('span', {}, `${n.app} · ${n.device_name}`), el('time', {}, ago(n.posted_at))),
     n.title ? el('div', { class: 'name' }, n.title) : null,
@@ -307,9 +307,31 @@ async function start() {
   $('#dot').title = st.connected ? 'Connected' : 'Connecting…';
   devices = (await api('/api/devices')).devices;
   renderTargets();
+  // Read where the unseen item is before marking everything seen.
+  const { focus } = await chrome.storage.session.get('focus').catch(() => ({}));
   send({ type: 'seen' });
   await loadPushes();
-  $('#text').focus();
+  if (focus?.id) await showItem(focus.tab, focus.id);
+  else $('#text').focus();
 }
+
+// Open the item's tab, scroll to it and highlight it.
+async function showItem(tab, id) {
+  if (tab === 'phone') {
+    $('.tab[data-tab="phone"]').click();
+    await loadMirror().catch(() => {});
+  }
+  const node = document.querySelector(`.item[data-id="${CSS.escape(id)}"]`);
+  if (!node) return;
+  node.scrollIntoView({ block: 'center' });
+  node.classList.add('flash');
+  setTimeout(() => node.classList.remove('flash'), 1800);
+}
+
+// Long texts scroll inside their card; a click shows them in full.
+document.addEventListener('click', (e) => {
+  const body = e.target.closest('.item .body');
+  if (body && !window.getSelection().toString()) body.classList.toggle('open');
+});
 
 start();
