@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Same up/down arrows as the web icon, scaled into the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="0.13" android:scaleY="0.13" android:translateX="20.7" android:translateY="20.7">
+        <path android:pathData="M196,120v272M128,188l68,-68 68,68"
+            android:strokeColor="#FFFFFF" android:strokeWidth="40"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+        <path android:pathData="M316,392V120M248,324l68,68 68,-68"
+            android:strokeColor="#FFFFFF" android:strokeWidth="40"
+            android:strokeLineCap="round" android:strokeLineJoin="round" />
+    </group>
+</vector>

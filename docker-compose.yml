@@ -1,0 +1,13 @@
+services:
+  pushbox:
+    build: .
+    container_name: pushbox
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "2483:8080"
+    volumes:
+      - pushbox_data:/data
+
+volumes:
+  pushbox_data:

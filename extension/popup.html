@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pushbox</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <section id="signin" hidden>
+    <img src="icons/icon-128.png" alt="" class="logo">
+    <h1>Pushbox</h1>
+    <label>Server <input id="server" type="url" spellcheck="false" placeholder="push.example.com"></label>
+    <button id="signinBtn" class="btn primary">Sign in with Pocket ID</button>
+    <p id="signinError" class="error"></p>
+  </section>
+
+  <section id="grant" hidden>
+    <img src="icons/icon-128.png" alt="" class="logo">
+    <h1>Pushbox</h1>
+    <p class="muted">Pushbox needs permission to reach <b id="grantHost"></b> again.</p>
+    <button id="grantBtn" class="btn primary">Allow access</button>
+  </section>
+
+  <section id="main" hidden>
+    <header>
+      <img src="icons/icon-32.png" alt="">
+      <strong>Pushbox</strong>
+      <span id="dot" class="dot" title="Offline"></span>
+      <nav>
+        <button data-tab="pushes" class="tab active">Pushes</button>
+        <button data-tab="phone" class="tab">Phone</button>
+        <button data-tab="settings" class="tab" aria-label="Settings">⚙</button>
+        <a id="webLink" class="tab weblink" target="_blank" rel="noopener" aria-label="Open the website">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42L17.59 5H14V3zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+        </a>
+      </nav>
+    </header>
+
+    <div id="tab-pushes" class="pane">
+      <form id="composer">
+        <textarea id="text" rows="3" placeholder="Note or link…  (Ctrl/⌘+Enter to send)"></textarea>
+        <div id="files" class="files"></div>
+        <div class="row">
+          <label class="btn" title="Attach files">📎<input id="fileInput" type="file" multiple hidden></label>
+          <select id="target"></select>
+          <button class="btn primary" type="submit" id="send">Send</button>
+        </div>
+        <button type="button" id="pushTab" class="btn ghost wide">Push this tab</button>
+        <p id="status" class="status"></p>
+      </form>
+      <div id="list" class="list"></div>
+    </div>
+
+    <div id="tab-phone" class="pane" hidden>
+      <div id="mirrorList" class="list"></div>
+      <p id="mirrorEmpty" class="muted center">No notifications from your phone right now.<br>Install the Pushbox Android app and turn on forwarding.</p>
+    </div>
+
+    <div id="tab-settings" class="pane" hidden>
+      <p class="muted">Signed in as <b id="meName"></b> on <span id="meServer"></span></p>
+      <label class="check"><input type="checkbox" id="mirrorToggle"> Show my phone's notifications</label>
+      <a id="openWeb" class="btn wide" target="_blank">Open the web app</a>
+      <button id="signout" class="btn danger wide">Sign out</button>
+    </div>
+  </section>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

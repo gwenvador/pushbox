@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pushbox</title>
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Login -->
+  <section id="login" class="screen" hidden>
+    <form id="loginForm" class="card login-card">
+      <img src="/icons/icon.svg" alt="" class="logo">
+      <h1>Pushbox</h1>
+      <p class="muted">Sign this device in to send and receive pushes.</p>
+      <label>Device name <input id="loginName" required maxlength="60" autocomplete="off"></label>
+      <button id="oidcBtn" class="btn primary" type="button" hidden></button>
+      <div id="passwordBox" class="password-box" hidden>
+        <label>Password <input id="loginPassword" type="password" autocomplete="current-password"></label>
+        <button id="passwordBtn" class="btn" type="submit">Sign in with password</button>
+      </div>
+      <p id="loginError" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- Main -->
+  <section id="main" class="screen" hidden>
+    <header class="topbar">
+      <div class="brand"><img src="/icons/icon.svg" alt=""><span>Pushbox</span></div>
+      <div class="me"><span id="connDot" class="dot" title="Offline"></span><span id="meName"></span></div>
+      <button id="settingsBtn" class="icon-btn" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2.1-1.6zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+      </button>
+    </header>
+
+    <div id="notifBanner" class="banner" hidden>
+      <span>Turn on notifications to get pushes when the app is closed.</span>
+      <button id="notifEnable" class="btn small primary">Enable</button>
+      <button id="notifDismiss" class="btn small ghost" aria-label="Dismiss">Later</button>
+    </div>
+
+    <form id="composer" class="card composer">
+      <textarea id="text" rows="3" placeholder="Type a note or paste a link. Drop or paste files here."></textarea>
+      <div id="attachments" class="attachments"></div>
+      <div class="composer-row">
+        <label class="btn ghost attach" title="Attach files">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M16.5 6.5v11a4.5 4.5 0 0 1-9 0V5a3 3 0 0 1 6 0v10.5a1.5 1.5 0 0 1-3 0V6.5H9v9a3 3 0 0 0 6 0V5a4.5 4.5 0 0 0-9 0v12.5a6 6 0 0 0 12 0v-11h-1.5z"/></svg>
+          <span>Files</span>
+          <input id="fileInput" type="file" multiple hidden>
+        </label>
+        <select id="target" aria-label="Send to"></select>
+        <button id="sendBtn" class="btn primary" type="submit">Send</button>
+      </div>
+      <div id="progress" class="progress" hidden><div></div><span></span></div>
+    </form>
+
+    <div id="feed" class="feed" aria-live="polite"></div>
+    <p id="empty" class="muted empty" hidden>Nothing pushed yet. Send something from another device.</p>
+    <button id="moreBtn" class="btn ghost more" hidden>Load more</button>
+  </section>
+
+  <!-- Settings drawer -->
+  <dialog id="settings" class="drawer">
+    <div class="drawer-head">
+      <h2>Settings</h2>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </div>
+
+    <h3>This device</h3>
+    <form id="renameForm" class="row">
+      <input id="renameInput" maxlength="60" aria-label="Device name">
+      <button class="btn small">Rename</button>
+    </form>
+    <div class="row">
+      <span id="notifState" class="muted"></span>
+      <button id="notifToggle" class="btn small"></button>
+    </div>
+
+    <h3>Devices</h3>
+    <ul id="deviceList" class="devices"></ul>
+
+    <h3>API & shortcuts</h3>
+    <p class="muted small">Create a token for scripts, iOS Shortcuts or a desktop helper. It is shown once.</p>
+    <form id="tokenForm" class="row">
+      <input id="tokenName" placeholder="Name, e.g. iPhone Shortcut" maxlength="60">
+      <button class="btn small">Create token</button>
+    </form>
+    <div id="tokenOut" class="token-out" hidden>
+      <code id="tokenValue"></code>
+      <button id="tokenCopy" class="btn small">Copy</button>
+      <pre id="tokenExample" class="small"></pre>
+    </div>
+
+    <h3>Danger zone</h3>
+    <div class="row wrap">
+      <button id="clearAll" class="btn small danger">Delete all pushes</button>
+      <button id="logout" class="btn small danger">Sign out this device</button>
+    </div>
+  </dialog>
+
+  <div id="dropOverlay" class="drop-overlay" hidden><div>Drop files to push</div></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
