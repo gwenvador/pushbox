@@ -26,6 +26,7 @@ import java.util.Set;
 public class ForwarderService extends NotificationListenerService {
     private static final String TAG = "Pushbox";
 
+    private static ForwarderService instance;
     private Prefs prefs;
     /** Notification key -> hash of what was last sent, to skip identical re-posts. */
     private final Map<String, Integer> sent = new HashMap<>();
@@ -35,6 +36,31 @@ public class ForwarderService extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         prefs = new Prefs(this);
+    }
+
+    @Override
+    public void onListenerConnected() { instance = this; }
+
+    @Override
+    public void onListenerDisconnected() { instance = null; }
+
+    /** This phone forwarded a notification with that key (and it is still showing). */
+    static boolean knows(String key) {
+        ForwarderService s = instance;
+        return s != null && key != null && s.sent.containsKey(key);
+    }
+
+    /** Dismissed on a computer: clear it from this phone's notification shade too. */
+    static void dismiss(String key) {
+        ForwarderService s = instance;
+        if (s == null || key == null) { Log.w(TAG, "remote dismiss: listener not connected"); return; }
+        try {
+            s.sent.remove(key); // no need to report this removal back
+            s.cancelNotification(key);
+            Log.i(TAG, "remote dismiss: cancelled " + key);
+        } catch (Exception e) {
+            Log.w(TAG, "remote dismiss", e);
+        }
     }
 
     @Override

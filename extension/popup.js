@@ -251,10 +251,21 @@ async function loadMirror() {
     el('div', { class: 'head' }, el('span', {}, `${n.app} · ${n.device_name}`), el('time', {}, ago(n.posted_at))),
     n.title ? el('div', { class: 'name' }, n.title) : null,
     n.text ? el('div', { class: 'body' }, n.text) : null,
+    el('div', { class: 'actions' }, el('button', {
+      class: 'btn small ghost del', title: 'Dismiss it on the phone too',
+      onclick: async (e) => {
+        const item = e.target.closest('.item');
+        item.classList.add('removing');
+        try { await api(`/api/mirror/${n.id}`, { method: 'DELETE' }); item.remove(); }
+        catch (err) { item.classList.remove('removing'); status(`Dismiss failed: ${err.message}`, 5000); }
+        $('#mirrorEmpty').hidden = !!document.querySelector('#mirrorList .item');
+      },
+    }, 'Dismiss')),
   )));
 }
 
 // ---------- Settings ----------
+$('#pushesToggle').addEventListener('change', (e) => chrome.storage.local.set({ pushesOff: !e.target.checked }));
 $('#mirrorToggle').addEventListener('change', async (e) => {
   await chrome.storage.local.set({ mirrorOff: !e.target.checked });
   send({ type: 'badge' });
@@ -299,8 +310,9 @@ async function start() {
   $('#openWeb').href = cfg.server;
   $('#webLink').href = cfg.server;
   $('#webLink').title = `Open ${new URL(cfg.server).host}`;
-  const { mirrorOff } = await chrome.storage.local.get('mirrorOff');
+  const { mirrorOff, pushesOff } = await chrome.storage.local.get(['mirrorOff', 'pushesOff']);
   $('#mirrorToggle').checked = !mirrorOff;
+  $('#pushesToggle').checked = !pushesOff;
   const st = await send({ type: 'status' });
   direct = st.direct || {};
   $('#dot').classList.toggle('on', !!st.connected);
@@ -327,6 +339,40 @@ async function showItem(tab, id) {
   node.classList.add('flash');
   setTimeout(() => node.classList.remove('flash'), 1800);
 }
+
+// ---------- Window mode ----------
+// Extension popups have a fixed size; the same page opened as a window can be
+// resized freely. Its last size and position are remembered.
+const WINDOWED = new URLSearchParams(location.search).has('window');
+if (WINDOWED) {
+  document.body.classList.add('windowed');
+  $('#popout').hidden = true;
+  let t;
+  addEventListener('resize', () => {
+    clearTimeout(t);
+    t = setTimeout(() => chrome.storage.local.set({
+      winBounds: { width: outerWidth, height: outerHeight, left: screenX, top: screenY },
+    }), 300);
+  });
+}
+
+// The worker asks the open window to show an item (desktop notification clicked).
+chrome.runtime.onMessage.addListener((msg) => {
+  if (!WINDOWED || msg.target !== 'window' || msg.type !== 'show') return;
+  send({ type: 'seen' });
+  loadPushes().then(() => showItem(msg.tab, msg.id));
+});
+
+$('#popout').addEventListener('click', async () => {
+  const { winId, winBounds } = await chrome.storage.local.get(['winId', 'winBounds']);
+  try {
+    if (winId) { await chrome.windows.update(winId, { focused: true }); window.close(); return; }
+  } catch { /* it was closed */ }
+  const b = winBounds || { width: 520, height: 760 };
+  const w = await chrome.windows.create({ url: chrome.runtime.getURL('popup.html?window=1'), type: 'popup', focused: true, ...b });
+  await chrome.storage.local.set({ winId: w.id });
+  window.close();
+});
 
 // Long texts scroll inside their card; a click shows them in full.
 document.addEventListener('click', (e) => {

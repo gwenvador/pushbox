@@ -19,6 +19,15 @@ async function setFocus(tab, id) {
 // Desktop notification clicked: show that item in the popup.
 async function openPopupAt(tab, id) {
   await setFocus(tab, id);
+  // The resizable window is open: bring it forward on that item.
+  const { winId } = await chrome.storage.local.get('winId');
+  if (winId) {
+    try {
+      await chrome.windows.update(winId, { focused: true });
+      await chrome.runtime.sendMessage({ target: 'window', type: 'show', tab, id });
+      return true;
+    } catch { /* closed meanwhile: fall back to the popup */ }
+  }
   try { await chrome.action.openPopup(); return true; } catch { return false; }
 }
 
@@ -237,6 +246,8 @@ function senderName(id) {
 }
 
 async function notifyPush(p) {
+  const { pushesOff } = await chrome.storage.local.get('pushesOff');
+  if (pushesOff) return; // still listed in the popup and counted in the badge
   const id = `push-${p.id}`;
   pushes.set(id, p);
   const buttons = [];
@@ -457,6 +468,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
 
 // Access to the server granted again from the popup: reconnect.
 chrome.permissions.onAdded.addListener(() => { connect(); buildMenus(); });
+
+// The resizable Pushbox window was closed: forget it.
+chrome.windows.onRemoved.addListener(async (id) => {
+  const { winId } = await chrome.storage.local.get('winId');
+  if (id === winId) chrome.storage.local.remove('winId');
+});
 
 // ---------- Lifecycle ----------
 // The alarm restarts the worker (and the socket) if the browser stopped it.

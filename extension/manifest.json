@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pushbox",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "Send text, links and files between your devices, and see your phone's notifications.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0MUBE2qa68oq0/iRWtyX6YyaAcGbn46eudh7jE+mfSJd/YO9W7X/9QR6YEjTKDkgw+XXsaJoOQj2+horGa+kvXbxtmSKXGCVec29VxXm7xtA7V3O4IRCok9hkj00wTU9b+mStCUseNBw9ysvZozGrwVHrlH2GXYnjHNLztiS/EUbgs07WJ/CKPP+PR7Qo1+jgq4ZjxYamczqmxWnqTnnTvopII8gUw+0jEOrabPM4pLaIGfbaLgY4ciwD6reYh7sYjg2p5XcL9XKURLHKc3VO4JjGmqaBev6hICbLNOrk5KFvba0y84e72MyaDM1oYFEMxpCI+tSaRN1V9A6OaTntQIDAQAB",
   "minimum_chrome_version": "116",

@@ -652,12 +652,13 @@ app.post('/api/mirror/dismiss', (req, res) => {
   res.json({ ok: true });
 });
 
-// A desktop dismissed it: close it on the other desktops (the phone keeps it).
+// Dismissed on a computer: close it everywhere, the phone included
+// (remote: true tells the phone to clear it from its notification shade).
 app.delete('/api/mirror/:id', (req, res) => {
   for (const [k, n] of mirrored) {
     if (n.id === req.params.id) {
       mirrored.delete(k);
-      broadcast({ type: 'mirror_dismiss', id: n.id, key: n.key, device: n.device });
+      broadcast({ type: 'mirror_dismiss', id: n.id, key: n.key, device: n.device, remote: true });
     }
   }
   res.json({ ok: true });

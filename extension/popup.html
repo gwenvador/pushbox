@@ -28,8 +28,11 @@
       <span id="dot" class="dot" title="Offline"></span>
       <nav>
         <button data-tab="pushes" class="tab active">Pushes</button>
-        <button data-tab="phone" class="tab">Phone</button>
+        <button data-tab="phone" class="tab">Notifications</button>
         <button data-tab="settings" class="tab" aria-label="Settings">⚙</button>
+        <button id="popout" class="tab weblink" title="Open in a resizable window" aria-label="Open in a resizable window">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 4h7v2H7.41l4.3 4.29-1.42 1.42L6 7.41V11H4V4zm16 16h-7v-2h3.59l-4.3-4.29 1.42-1.42L18 16.59V13h2v7z"/></svg>
+        </button>
         <a id="webLink" class="tab weblink" target="_blank" rel="noopener" aria-label="Open the website">
           <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42L17.59 5H14V3zM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
         </a>
@@ -58,6 +61,7 @@
 
     <div id="tab-settings" class="pane" hidden>
       <p class="muted">Signed in as <b id="meName"></b> on <span id="meServer"></span></p>
+      <label class="check"><input type="checkbox" id="pushesToggle"> Show pushes (notes, links, files) as notifications</label>
       <label class="check"><input type="checkbox" id="mirrorToggle"> Show my phone's notifications</label>
       <a id="openWeb" class="btn wide" target="_blank">Open the web app</a>
       <button id="signout" class="btn danger wide">Sign out</button>

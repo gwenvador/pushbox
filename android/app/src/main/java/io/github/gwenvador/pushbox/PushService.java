@@ -261,6 +261,14 @@ public class PushService extends Service {
                 Notifier.push(this, p);
                 break;
             }
+            case "mirror_dismiss":
+                // One of this phone's notifications was dismissed on a computer.
+                if (msg.optBoolean("remote")) {
+                    boolean mine = msg.optString("device").equals(Hub.myId) || ForwarderService.knows(msg.optString("key"));
+                    Log.i(TAG, "remote dismiss: mine=" + mine + " device=" + msg.optString("device") + " me=" + Hub.myId);
+                    if (mine) ForwarderService.dismiss(msg.optString("key"));
+                }
+                break;
             case "delete":
                 Hub.emit(l -> l.onDelete(msg.optString("id")));
                 Notifier.cancelPush(this, msg.optString("id"));
