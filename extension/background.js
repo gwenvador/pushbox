@@ -193,6 +193,11 @@ async function handle(msg) {
     await notifyPush(p);
     await setFocus('pushes', p.id);
     await addUnread(1);
+    // A link arriving live opens in a background tab (not for the catch-up on reconnect).
+    const { linksOff } = await chrome.storage.local.get('linksOff');
+    if (!linksOff && p.type === 'link' && /^https?:\/\//.test(p.url || '')) {
+      chrome.tabs.create({ url: p.url, active: false });
+    }
   } else if (msg.type === 'delete') {
     chrome.notifications.clear(`push-${msg.id}`);
   } else if (msg.type === 'mirror') {

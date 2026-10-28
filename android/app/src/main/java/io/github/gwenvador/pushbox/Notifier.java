@@ -47,6 +47,11 @@ final class Notifier {
             Intent view = new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             b.setContentIntent(PendingIntent.getActivity(c, nid, view, PendingIntent.FLAG_IMMUTABLE));
             b.addAction(new Notification.Action.Builder(null, "Copy link", ActionReceiver.copy(c, nid, url)).build());
+            // Share sheet for the link, right next to "Copy link".
+            Intent share = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, url);
+            Intent chooser = Intent.createChooser(share, "Share link").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            b.addAction(new Notification.Action.Builder(null, "Share", PendingIntent.getActivity(c, nid + 3, chooser,
+                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)).build());
         } else if ("file".equals(type)) {
             // Tapping opens the app; only the button downloads.
             b.setContentIntent(PendingIntent.getActivity(c, nid, open, PendingIntent.FLAG_IMMUTABLE));

@@ -266,6 +266,7 @@ async function loadMirror() {
 
 // ---------- Settings ----------
 $('#pushesToggle').addEventListener('change', (e) => chrome.storage.local.set({ pushesOff: !e.target.checked }));
+$('#linksToggle').addEventListener('change', (e) => chrome.storage.local.set({ linksOff: !e.target.checked }));
 $('#mirrorToggle').addEventListener('change', async (e) => {
   await chrome.storage.local.set({ mirrorOff: !e.target.checked });
   send({ type: 'badge' });
@@ -310,7 +311,8 @@ async function start() {
   $('#openWeb').href = cfg.server;
   $('#webLink').href = cfg.server;
   $('#webLink').title = `Open ${new URL(cfg.server).host}`;
-  const { mirrorOff, pushesOff } = await chrome.storage.local.get(['mirrorOff', 'pushesOff']);
+  const { mirrorOff, pushesOff, linksOff } = await chrome.storage.local.get(['mirrorOff', 'pushesOff', 'linksOff']);
+  $('#linksToggle').checked = !linksOff;
   $('#mirrorToggle').checked = !mirrorOff;
   $('#pushesToggle').checked = !pushesOff;
   const st = await send({ type: 'status' });

@@ -56,6 +56,16 @@ class ShareActivity : ComponentActivity() {
                 val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                 var sending by androidx.compose.runtime.remember { mutableStateOf(false) }
                 LaunchedEffect(Unit) { vm.refresh() }
+                // Only one other device: there is no choice to make, send straight to it.
+                var auto by androidx.compose.runtime.remember { mutableStateOf(false) }
+                LaunchedEffect(vm.devices, vm.refreshing) {
+                    val only = vm.targets.singleOrNull()
+                    if (!auto && !vm.refreshing && only != null && (files.isNotEmpty() || text != null)) {
+                        auto = true
+                        sending = true
+                        send(only.id)
+                    }
+                }
                 ModalBottomSheet(onDismissRequest = { if (!sending) finish() }, sheetState = sheet) {
                     Column(Modifier.navigationBarsPadding().padding(bottom = 16.dp)) {
                         Text("Send to", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp))
